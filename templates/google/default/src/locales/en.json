@@ -1,0 +1,39 @@
+{
+  "app": {
+    "help": "Help",
+    "privacy": "Privacy",
+    "terms": "Terms"
+  },
+  "login": {
+    "reason": "You have been logged out.",
+    "next": "Next",
+    "close": "Close",
+    "learn": "Learn more",
+    "user": {
+      "title": "Sign in",
+      "subtitle": "Use your Google account",
+      "user": "E-mail or phone",
+      "forgot": "Forgot email?",
+      "tip": "Not your computer? Use a Private Window to sign in.",
+      "create": "Create account",
+      "errors": {
+        "required": "Enter an email or phone number",
+        "valid": "Enter a valid email or phone number"
+      }
+    },
+    "password": {
+      "title": "Welcome",
+      "subtitle": "",
+      "password": "Enter password",
+      "show": "Show password",
+      "forgot": "Forgot password?",
+      "errors": {
+        "incorrect": "Wrong password. Try again or click 'Forgot password' to reset it."
+      }
+    },
+    "2fa": {
+      "title": "2-step Verification",
+      "subtitle": "This extra step shows that it's really you trying to sign in"
+    }
+  }
+}

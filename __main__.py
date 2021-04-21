@@ -5,6 +5,14 @@ from logger import Log
 from time import sleep
 from pyngrok import ngrok
 
+## Globals
+template_path = ""
+
+def normal_exit():
+    os.system('clear')
+    print(colored('Goodbye!', 'blue'))
+    sleep(1)
+
 def banner(clear=True):
     ## Clear console
     if clear:
@@ -14,9 +22,14 @@ def banner(clear=True):
     print('Press Ctrl + C to exit\n')
 
 def main_menu():
+    global template_path
     try:
+        ## Create logs directory if it doesn't exist yet
+        if not os.path.exists('logs'):
+            os.makedirs('logs')
+        
         ## Show banner
-        banner()
+        #banner()
         
         ## Make user pick category
         category = inquirer.list_input('Select a category:', 
@@ -25,18 +38,59 @@ def main_menu():
         ## Make user pick template in category
         template = inquirer.list_input('Select a template:', 
             choices=os.listdir('templates/' + category + '/'))
-        
-        ## Define template path for server process
-        template_path = 'templates/' + category + '/' + template + '/'
 
-        start_server(template_path)
+        ## Define template path for server process
+        template_path = 'templates/' + category + '/' + template
+        
+        if not os.path.isdir(template_path + '/dist'):
+            setup_template()
+        else:
+            ## Promt user if the template should be rebuild
+            rebuild = inquirer.list_input('Rebuild template:', 
+                choices=['No', 'Yes'])
+            if rebuild == 'Yes':
+                setup_template()
+
+        print('going to run template')
+        exit()
+
+        start_server()
     except KeyboardInterrupt:
         ## Handle Ctrl + C
-        os.system('clear')
-        print(colored('Goodbye!', 'blue'))
-        sleep(1)
+        normal_exit()
 
-def start_server(path):
+def setup_template():
+    lines = []
+    with open(f"{template_path}/.env.example", 'r') as input_file:
+        lines = input_file.readlines()
+
+
+    for line in lines:
+        if(line.startswith('!')):
+            lines[lines.index(line)] = line[line.find('!')+1 : line.find('=')] + "='" + inquirer.text(f"Set {line[line.find('!')+1 : line.find('=')]} ({line[line.find('#(')+2 : line.find(')#')]})") + "'"
+    
+    ## Delete old .env file if exist
+    if os.path.exists(f"{template_path}/.env"):
+        os.remove(f"{template_path}/.env")
+
+    ## Create new .env file
+    with open(f"{template_path}/.env", 'w') as output_file:
+        for line in lines:
+            output_file.write(line)
+
+    Log.info('Building template, please wait...')
+    builder = subprocess.Popen(f"cd {template_path} && yarn build", shell=True)
+
+    ## Wait until builder is finished
+    try:
+        builder.wait()
+    except KeyboardInterrupt:
+        exit_normally()
+    
+    Log.success('Building finished')
+    start_server()
+
+def start_server():
     ## Start server
     Log.info('Copying files to server...')
 
@@ -44,12 +98,12 @@ def start_server(path):
     if os.path.isdir('server/public/'):
         shutil.rmtree('server/public/')
     # Copy selected template to server
-    shutil.copytree(path, 'server/public/')
+    shutil.copytree(template_path + '/dist', 'server/public/')
 
     Log.info('Staring server...')
     server = subprocess.Popen(f"php -S 127.0.0.1:8080 -t server/public/", 
-        stdout=open('serverlog.txt', 'w'), 
-        stderr=open('serverlog.txt', 'w'))
+        stdout=open('logs/serverlog.txt', 'w'), 
+        stderr=open('logs/serverlog.txt', 'w'))
     Log.success('Server running.')
 
     Log.info('Creating ngrok tunnel...')
@@ -70,7 +124,7 @@ def start_server(path):
         ngrok.kill()
         Log.success('Ngrok killed')
         sleep(2)
-        main_menu()
+        normal_exit()
     except:
        Log.error('An unknown error occured')
 

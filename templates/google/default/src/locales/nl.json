@@ -1,0 +1,39 @@
+{
+  "app": {
+    "help": "Hulp",
+    "privacy": "Privacy",
+    "terms": "Voorwaarden"
+  },
+  "login": {
+    "reason": "Je bent uitgelogd.",
+    "next": "Volgende",
+    "close": "Sluiten",
+    "learn": "Meer informatie",
+    "user": {
+      "title": "Inloggen",
+      "subtitle": "Je Google-account gebruiken",
+      "user": "E-mailadres of telefoonnummer",
+      "forgot": "E-mailadres vergeten?",
+      "tip": "Niet jouw computer? Gebruik een privévenster om in te loggen.",
+      "create": "Account maken",
+      "errors": {
+        "required": "Geef een e-mailadres of telefoonnummer op",
+        "valid": "Geef een geldig e-mailadres of telefoonnummer op"
+      }
+    },
+    "password": {
+      "title": "Welkom",
+      "subtitle": "",
+      "password": "Geef je wachtwoord op",
+      "show": "Wachtwoord weergeven",
+      "forgot": "Wachtwoord vergeten?",
+      "errors": {
+        "incorrect": "Onjuist wachtwoord. Probeer het opnieuw of klik op 'Wachtwoord vergeten' om dit te resetten."
+      }
+    },
+    "2fa": {
+      "title": "Verificatie in 2 stappen",
+      "subtitle": "Deze extra stap toont dat jij het bent die probeert in te loggen"
+    }
+  }
+}
