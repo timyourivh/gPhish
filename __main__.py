@@ -1,9 +1,10 @@
-import os, subprocess, shutil, inquirer, unicodedata
+import os, subprocess, shutil, unicodedata
 from termcolor import colored
 from art import text2art
 from logger import Log
 from time import sleep
 from pyngrok import ngrok
+from InquirerPy import inquirer # Docs: https://github.com/kazhala/InquirerPy/wiki
 
 ## Globals
 template_path = ""
@@ -33,12 +34,14 @@ def main_menu():
         #banner()
         
         ## Make user pick category
-        category = inquirer.list_input('Select a category:', 
-            choices=os.listdir('templates/'))
+        category = inquirer.select(
+            message='Select a category:', 
+            choices=os.listdir('templates/')).execute()
 
         ## Make user pick template in category
-        template = inquirer.list_input('Select a template:', 
-            choices=os.listdir('templates/' + category + '/'))
+        template = inquirer.select(
+            message='Select a template:', 
+            choices=os.listdir('templates/' + category + '/')).execute()
 
         ## Define template path for server process
         template_path = 'templates/' + category + '/' + template
@@ -47,9 +50,8 @@ def main_menu():
             setup_template()
         else:
             ## Promt user if the template should be rebuild
-            rebuild = inquirer.list_input('Rebuild template:', 
-                choices=['Yes', 'Yes'])
-            if rebuild == 'Yes':
+            rebuild = inquirer.confirm('Rebuild template?', default=False).execute()
+            if rebuild:
                 setup_template()
 
         ## Start server if template is already built
@@ -66,10 +68,10 @@ def setup_template():
 
     for line in lines:
         if(line.startswith('!')):
-            value = inquirer.text(f"Set {line[line.find('!')+1 : line.find('=')]}", default=line[line.find('#(')+3 : line.find(')#')-1])
+            value = inquirer.text(
+                message=f"Set {line[line.find('!')+1 : line.find('=')]}:", 
+                default=line[line.find('#(')+3 : line.find(')#')-1]).execute()
             if len(value) > 1:
-                print(value)
-                print(value.encode('ascii'))
                 lines[lines.index(line)] = line[line.find('!')+1 : line.find('=')] + "='" + value + "'"
             else:
                 lines[lines.index(line)] = line[line.find('!')+1 : line.find('=')] + "=" + line[line.find('#(')+2 : line.find(')#')]
@@ -83,8 +85,6 @@ def setup_template():
     with open(f"{template_path}/.env", 'w') as output_file:
         for line in lines:
             output_file.write(line)
-            
-    exit()
 
     Log.info('Building template, please wait...')
     builder = subprocess.Popen(f"cd {template_path} && yarn build", shell=True)
