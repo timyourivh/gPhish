@@ -1,4 +1,4 @@
-import os, subprocess, shutil, inquirer
+import os, subprocess, shutil, inquirer, unicodedata
 from termcolor import colored
 from art import text2art
 from logger import Log
@@ -12,6 +12,7 @@ def normal_exit():
     os.system('clear')
     print(colored('Goodbye!', 'blue'))
     sleep(1)
+    exit()
 
 def banner(clear=True):
     ## Clear console
@@ -47,13 +48,11 @@ def main_menu():
         else:
             ## Promt user if the template should be rebuild
             rebuild = inquirer.list_input('Rebuild template:', 
-                choices=['No', 'Yes'])
+                choices=['Yes', 'Yes'])
             if rebuild == 'Yes':
                 setup_template()
 
-        print('going to run template')
-        exit()
-
+        ## Start server if template is already built
         start_server()
     except KeyboardInterrupt:
         ## Handle Ctrl + C
@@ -67,7 +66,14 @@ def setup_template():
 
     for line in lines:
         if(line.startswith('!')):
-            lines[lines.index(line)] = line[line.find('!')+1 : line.find('=')] + "='" + inquirer.text(f"Set {line[line.find('!')+1 : line.find('=')]} ({line[line.find('#(')+2 : line.find(')#')]})") + "'"
+            value = inquirer.text(f"Set {line[line.find('!')+1 : line.find('=')]}", default=line[line.find('#(')+3 : line.find(')#')-1])
+            if len(value) > 1:
+                print(value)
+                print(value.encode('ascii'))
+                lines[lines.index(line)] = line[line.find('!')+1 : line.find('=')] + "='" + value + "'"
+            else:
+                lines[lines.index(line)] = line[line.find('!')+1 : line.find('=')] + "=" + line[line.find('#(')+2 : line.find(')#')]
+
     
     ## Delete old .env file if exist
     if os.path.exists(f"{template_path}/.env"):
@@ -77,6 +83,8 @@ def setup_template():
     with open(f"{template_path}/.env", 'w') as output_file:
         for line in lines:
             output_file.write(line)
+            
+    exit()
 
     Log.info('Building template, please wait...')
     builder = subprocess.Popen(f"cd {template_path} && yarn build", shell=True)
