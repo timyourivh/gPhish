@@ -2,3 +2,5 @@ __pycache__
 .venv
 .server/public
 logs
+conected_ips.txt
+usernames.txt
