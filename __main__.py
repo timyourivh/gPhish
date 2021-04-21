@@ -31,7 +31,7 @@ def main_menu():
             os.makedirs('logs')
         
         ## Show banner
-        #banner()
+        banner()
         
         ## Make user pick category
         category = inquirer.select(
@@ -47,6 +47,8 @@ def main_menu():
         template_path = 'templates/' + category + '/' + template
         
         if not os.path.isdir(template_path + '/dist'):
+            ## Build template if not build yet
+            Log.info('Template not build yet, starting setup')
             setup_template()
         else:
             ## Promt user if the template should be rebuild
@@ -103,13 +105,13 @@ def start_server():
     Log.info('Copying files to server...')
 
     # Delete old template if not deleted yet
-    if os.path.isdir('server/public/'):
-        shutil.rmtree('server/public/')
+    if os.path.isdir('.server/public/'):
+        shutil.rmtree('.server/public/')
     # Copy selected template to server
-    shutil.copytree(template_path + '/dist', 'server/public/')
+    shutil.copytree(template_path + '/dist', '.server/public/')
 
     Log.info('Staring server...')
-    server = subprocess.Popen(f"php -S 127.0.0.1:8080 -t server/public/", 
+    server = subprocess.Popen(f"php -S 127.0.0.1:8080 -t .server/public/", 
         stdout=open('logs/serverlog.txt', 'w'), 
         stderr=open('logs/serverlog.txt', 'w'))
     Log.success('Server running.')
@@ -126,7 +128,7 @@ def start_server():
     except KeyboardInterrupt:
         Log.info('Ctrl + C pressed, Killing server...')
         server.kill()
-        shutil.rmtree('server/public/')
+        shutil.rmtree('.server/public/')
         Log.success('Server killed')
         Log.info('Killing ngrok...')
         ngrok.kill()
