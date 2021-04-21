@@ -20,7 +20,7 @@ abstract class DataHandler
 
         fwrite($fp, $victim);
         fwrite($fp, $ipaddress);
-        fwrite($fp, $useragent);
+        fwrite($fp, ' User-Agent: ' . $useragent);
 
         self::logToConsole(json_encode([
             'tag'       => 'connection',
