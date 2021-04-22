@@ -1,2 +1,9 @@
 art==5.1
+InquirerPy==0.1.1
+prompt-toolkit==3.0.18
+pyngrok==5.0.5
+python-dotenv==0.17.0
+PyYAML==5.4.1
 termcolor==1.1.0
+terminaltables==3.1.0
+wcwidth==0.2.5

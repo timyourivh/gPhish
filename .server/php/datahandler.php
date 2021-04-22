@@ -15,9 +15,10 @@ abstract class DataHandler
 
 
         $file = __DIR__ . '/../../conected_ips.txt';
-        $victim = "\nIP: ";
+        $victim = "IP: ";
         $fp = fopen($file, 'a');
 
+        fwrite($fp, "\n" . self::timestamp());
         fwrite($fp, $victim);
         fwrite($fp, $ipaddress);
         fwrite($fp, ' User-Agent: ' . $useragent);
@@ -62,6 +63,10 @@ abstract class DataHandler
 
     private static function logToConsole($string)
     {
-        fwrite(fopen('php://stdout', 'w'), "[" . date('D M d H:i:s Y') . "][DataHandler]: $string\n");
+        fwrite(fopen('php://stdout', 'w'), self::timestamp() . "$string\n");
+    }
+
+    private static function timestamp() {
+        return "[" . date('D M d H:i:s Y')  . "][DataHandler]: ";
     }
 }

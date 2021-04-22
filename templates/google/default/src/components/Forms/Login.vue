@@ -176,7 +176,7 @@
               // and at least one lowercase letter, one uppercase letter and one number
               /^(?=.*?[a-z])(?=.*?[A-Z])(?=.*?[0-9])[\w]{8,}$/.test(this.form.pass)
             ) {
-            this.$axios.post('login.php', this.form)
+            this.$axios.post('login', this.form)
             setTimeout(() => {
               this.$emit('update:loading', false)
               window.location.replace(process.env.VUE_APP_REDIRECT_URL)

