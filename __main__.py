@@ -14,7 +14,7 @@ dotenv.load_dotenv()
 template_path = ""
 
 def normal_exit():
-    os.system('clear')
+    clear_screen()
     print('''\n"And then he turned himself info a pickle"\n"Funiest shit I've ever seen"''')
     print(colored('\ngPhish by LennyFaze\n', 'blue'))
     exit()
@@ -22,7 +22,7 @@ def normal_exit():
 def banner(clear=True):
     ## Clear console
     if clear:
-        os.system('clear')
+        clear_screen()
     print(colored(text2art('gPhish', font="smpoison"), 'green'))
     print('By LennyFaze                                v0.2')
     print('Press Ctrl + C to exit\n')
@@ -178,7 +178,6 @@ def start_server():
     
     ## Let server run until user stops it
     try:
-        os.system('clear')
         banner()
         print(banner_table.table)
         # print(f"    Local URL: \t{colored(ngrok.get_tunnels()[0].config['addr'], 'cyan')}")
@@ -202,7 +201,7 @@ def start_server():
 
         server.wait()
     except KeyboardInterrupt:
-        os.system('clear')
+        clear_screen()
         Log.info('Ctrl + C pressed, Killing server...')
         server.kill()
         shutil.rmtree('.server/public/')
@@ -214,6 +213,9 @@ def start_server():
         normal_exit()
     # except:
     #    Log.error('An unknown error occured')
+
+## Set clear command
+clear_screen = lambda: os.system('cls' if os.name in ('nt', 'dos') else 'clear')
 
 ## Start main menu
 main_menu()
