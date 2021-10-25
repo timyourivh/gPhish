@@ -1,10 +1,13 @@
 # gPhish
 Universal phishing tool that accepts vue templates.
 
+## !!! Disclaimer !!!
+
+I am by no means a professional hacker/socialengineer. I made this tool for fun so if you see any room for impovements feel free to create a pr or fork.
+I was inspired by [htr-tech](https://github.com/htr-tech)'s [zPhisher](https://github.com/htr-tech/zphisher).
+
 ---
 ### #Installation
-
-__For windows:__
 
 requirements:
 * php
@@ -24,19 +27,14 @@ Yarn:
 :   `yarn install` and `yarn build`
 
 ---
-
-__For linux:__
-
-Working on it
-
-
----
 ### #Usage
 I dont know how to add a command to the systems cli so you'll have to start the program by following these steps:
 1. Move to the root folder
 1. Run `py ./` or `python ./` (It will run the `__main__.py` automatically)
 
 Once started you can pick a template and run it.
+
+*If anyone can come up with a better way of doin this feel free to create a pr*
 
 ---
 ### #Creating templates
@@ -152,4 +150,32 @@ TEST1='Non configurable .env values (development only)'
 
 ## Don't forget if you want to use env variables in the frontend of vue project, prefix them with 'VUE_APP_' like this:
 VUE_APP_TEST3='Front-end variable'
+```
+
+### License
+
+```
+gPhish - Open-Source Phishing Framework
+
+The MIT License (MIT)
+
+Copyright (c) 2021 Tim van Herwijnen
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software ("gPhish") and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
 ```
