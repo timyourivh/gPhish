@@ -33,8 +33,13 @@ def main_menu():
         ## Show banner
         banner()
 
+        ## Make user pick action
+        start = inquirer.select(
+            message='Welcome, select an action:', 
+            choices=['start', 'env setup']).execute()
+
         ## Create env if it doesn't exist yet
-        if not os.path.isfile('.env'):
+        if not os.path.isfile('.env') or start == 'env setup':
             Log.info('No .env detected creating new one...')
 
             # using my own env creator function :p
